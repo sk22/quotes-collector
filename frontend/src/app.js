@@ -1,5 +1,6 @@
 import React, { useState, useEffect, createRef } from 'react';
 import LoggedIn from './logged-in'
+import Login from './login'
 import QuotesList from './quotes-list'
 
 /** Function that fetches the quote data from the backend */
@@ -9,24 +10,11 @@ async function fetchQuotes() {
   return await res.json()
 }
 
-/** Component that is shown to users that are not yet logged in */
-const Login = ({ setUsername }) => {
-  const inputRef = createRef()
-  // Handles the form submit to log in the user
-  const handleSubmit = e => {
-    setUsername(inputRef.current.value)
-    e.preventDefault()
-  }
-  return <form onSubmit={handleSubmit}>
-    <input ref={inputRef} placeholder="Username..." />{' '}
-    <input type="submit" />
-  </form>
-}
-
+/** Root component that gets rendered onto the page */
 const App = () => {
-  // State for the username
+  // States for username and quotes.
+  // Get changed by child components and/or the database
   const [username, setUsername] = useState('')
-  // State for the quotes
   const [quotes, setQuotes] = useState([])
   const loggedIn = username.length > 0;
 

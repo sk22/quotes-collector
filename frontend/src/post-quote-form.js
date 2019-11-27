@@ -8,8 +8,8 @@ const PostQuoteForm = ({ onPost }) => {
 
   /** Clears the form and moves the focus. Executed after hitting the submit button. */
   const clearForm = () => {
-    textRef.current.value = ''
-    // authorRef.current.value = ''
+    setText('')
+    // setAuthor('')
     // Not clearing the author because one might want to save mutlipel quotes by
     // one author. Pressing tab selects all text, so clearing the input has no benefit anyway.
     textRef.current.focus()
@@ -22,14 +22,21 @@ const PostQuoteForm = ({ onPost }) => {
     clearForm()
   }
 
+  /** Utility to generalize the onChange event handlers for the input elements */
   const set = (setter, ref) => () => {
     setter(ref.current.value)
   }
 
-  useLayoutEffect(() => {
-    textRef.current.focus()
-  }, [textRef])
+  // todo: figure out how to do this probably.
+  // should only focus the text input once when mounted
+  // useLayoutEffect(() => {
+  //   textRef.current.focus()
+  // }, [textRef])
 
+  /**
+   * Variable that determines if the button should be disabled.
+   * That is, if both inputs contain text.
+   */
   const disabled = [text, author].some(t => t.trim().length === 0)
   
   return (
