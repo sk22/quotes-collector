@@ -12,8 +12,9 @@ create table users (
 );
 
 create table votes (
+  v_id integer primary key autoincrement,
   v_quote integer not null,
   v_user integer not null,
   v_vote boolean not null,
-  primary key (v_quote, v_user)
+  UNIQUE(v_quote, v_user)
 );
