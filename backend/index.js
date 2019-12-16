@@ -12,6 +12,7 @@ const db = new Database('./data/quotes.db', err => {
   // output connection errors to the console
   if (err) console.error(err)
   
+  // import the api functions
   const {
     selectAllFromTable,
     selectOneFromTable,
