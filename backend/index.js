@@ -16,7 +16,8 @@ const db = new Database('./data/quotes.db', err => {
     selectAllFromTable,
     selectOneFromTable,
     insertIntoTable,
-    deleteFromTable
+    deleteFromTable,
+    updateOneInTable
   } = createApi(db)
 
   // for every table, generate the api endpoints
@@ -45,6 +46,13 @@ const db = new Database('./data/quotes.db', err => {
         .catch(next)
     })
 
+    // put endpoints for updating existing rows in a table
+    app.put(`/api/${table.name}/:id`, (req, res, next) => {
+      updateOneInTable(table, req.params.id, req.body)
+        .then(() => res.send({ ok: true }))
+        .catch(next)
+    })
+
     // delete endpoints for deleting specific rows from a table
     app.delete(`/api/${table.name}/:id`, (req, res, next) => {
       deleteFromTable(table, req.params.id)
@@ -55,8 +63,8 @@ const db = new Database('./data/quotes.db', err => {
 
   // error handler to override the default html output
   app.use(function(err, req, res, next){
-    console.error(err.stack);
-    res.status(500).send({ ok: false, error: err.message });
+    console.error(err.stack || err);
+    res.status(err.status || 500).send({ ok: false, error: err.message });
   })
   
     

@@ -3,6 +3,20 @@
  */
 const formulateLinks = links => links ? ` INNER JOIN ${links.join(', ')}` : ''
 
+/**
+ * Filter given fields to only return fields that are part of the table.
+ */
+const filterInputFields = (table, values, keepKey) =>
+  Object.keys(values)
+    // only keep the fields that are defined by the table
+    .filter(f => table.fields.includes(f))
+    // if the keepKey argument is set, keep the field.
+    // otherwise, only keep the field if it is not the key.
+    .filter(f => keepKey || f !== table.key)
+
+/**
+ * Creates an API providing functions that interact with the database
+ */
 const createApi = (db) => ({
   /**
    * Select all rows from a table.
@@ -32,14 +46,28 @@ const createApi = (db) => ({
    * definition are used.
    */
   insertIntoTable: (table, values) => new Promise((resolve, reject) => {
-    const fieldsApplied = Object.keys(values)
-      .filter(f => table.fields.includes(f))
+    const filteredFields = filterInputFields(table, values)
 
-    // create sql statement based on the table's applied fields
-    const sql = `INSERT INTO ${table.name} (${fieldsApplied.join(', ')}) `
-      + `VALUES (${Array(fieldsApplied.length).fill('?').join(', ')})`
+    // create sql statement based on the given fields
+    const sql = `INSERT INTO ${table.name} (${filteredFields.join(', ')}) `
+      + `VALUES (${Array(filteredFields.length).fill('?').join(', ')})`
 
-    db.run(sql, fieldsApplied.map(f => values[f]), err => {
+    db.run(sql, filteredFields.map(f => values[f]), err => {
+      err ? reject(err) : resolve()
+    })
+  }),
+
+  updateOneInTable: (table, key, values) => new Promise((resolve, reject) => {
+    const filteredFields = filterInputFields(table, values)
+    if (filteredFields.length === 0) return resolve()
+
+    // create sql statement based on the given fields
+    const sql = `UPDATE ${table.name} SET ${filteredFields
+      .map(field => `${field} = ?`) // generates: field = value, ...
+      .join(', ')} WHERE ${table.key} = ?`
+
+    // run the sql statement with the field values and the key
+    db.run(sql, [...filteredFields.map(f => values[f]), key], err => {
       err ? reject(err) : resolve()
     })
   }),
