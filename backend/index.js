@@ -50,7 +50,7 @@ const db = new Database('./data/quotes.db', err => {
     // post endpoints for creating new rows in a table
     app.post(`/api/${table.name}`, (req, res, next) => {
       insertIntoTable(table, req.body)
-        .then(() => res.status(201).send({ ok: true }))
+        .then(row => res.status(201).send({ ok: true, data: row }))
         .catch(next)
     })
 
