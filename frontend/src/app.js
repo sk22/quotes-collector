@@ -27,9 +27,14 @@ const App = () => {
     setQuotes([{ id: quotes.length + 1, q_text, q_author, q_user, q_votes: 0 }, ...quotes])
   }
 
-  const handleRemoveQuote = id => {
+  const handleRemoveQuote = async id => {
     // todo: api call
-    setQuotes(quotes.filter(q => q.id !== id))
+    try {
+      await fetch(`/api/quotes/${id}`, { method: 'DELETE' })
+      setQuotes(quotes.filter(q => q.q_id !== id))
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   const handleLogout = () => {
