@@ -7,7 +7,7 @@ import QuotesList from './quotes-list'
 async function fetchQuotes() {
   // Fetches the quotes from the backend
   const res = await fetch(`/api/quotes`)
-  return await res.json()
+  return (await res.json()).data
 }
 
 /** Root component that gets rendered onto the page */
@@ -23,8 +23,8 @@ const App = () => {
     fetchQuotes().then(setQuotes)
   }, [])
 
-  const handleAddQuote = (text, author, user) => {
-    setQuotes([{ id: quotes.length + 1, text, author, user, votes: 0 }, ...quotes])
+  const handleAddQuote = (q_text, q_author, q_user) => {
+    setQuotes([{ id: quotes.length + 1, q_text, q_author, q_user, q_votes: 0 }, ...quotes])
   }
 
   const handleRemoveQuote = id => {

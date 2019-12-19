@@ -5,20 +5,23 @@ const QuoteStyle = styled.div`
   /* todo: style quotes */
 `
 
-const Quote = ({ id, votes, user, text, author, showRemove, onRemove }) =>
+const Quote = ({ quote: q, showRemove, onRemove }) =>
   <QuoteStyle>
     <blockquote>
-      <p>{text}</p>
-      <i>— {author}</i>
+      <p>{q.q_text}</p>
+      <i>— {q.q_author}</i>
     </blockquote>
-    <span className="votes">{votes}</span>,{' '}
-    <span className="user">posted by {user}</span>
-    {showRemove && <>{' '}<button onClick={() => onRemove(id)}>remove</button></>}
+    <span className="votes">{q.q_votes}</span>,{' '}
+    <span className="user">posted by {q.u_username}</span>
+    {showRemove &&
+      <>{' '}<button onClick={() => onRemove(q.q_id)}>remove</button></>}
   </QuoteStyle>
 
 const QuotesList = ({quotes, user, onRemove}) => (
   <ul>
-    {quotes.map(quote => <Quote onRemove={onRemove} showRemove={user === quote.user} {...quote} />)}
+    {quotes.map(q => (
+      <Quote onRemove={onRemove} showRemove={user === q.u_username} quote={q} />
+    ))}
   </ul>
 )
 
