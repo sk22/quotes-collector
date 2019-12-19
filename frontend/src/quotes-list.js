@@ -17,10 +17,14 @@ const Quote = ({ quote: q, showRemove, onRemove }) =>
       <>{' '}<button onClick={() => onRemove(q.q_id)}>remove</button></>}
   </QuoteStyle>
 
-const QuotesList = ({quotes, user, onRemove}) => (
+const QuotesList = ({ quotes, user, onRemove }) => (
   <ul>
-    {quotes.map(q => (
-      <Quote onRemove={onRemove} showRemove={user === q.u_username} quote={q} />
+    {quotes.sort((q1, q2) => q2.q_id - q1.q_id).map(q => (
+      <Quote
+        key={q.q_id}
+        onRemove={onRemove}
+        showRemove={user && user.u_id === q.q_user}
+        quote={q} />
     ))}
   </ul>
 )

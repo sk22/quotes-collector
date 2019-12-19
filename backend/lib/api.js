@@ -16,7 +16,8 @@ const filterInputFields = (table, values, keepKey) =>
 
 const makeCallbackThatGetsLast = (db, table, resolve, reject) => function(err) {
   if (err) return reject(err)
-  db.get(`SELECT * FROM ${table.name} WHERE ${table.key} = ?`, this.lastID,
+  db.get(`SELECT * FROM ${table.name}${formulateLinks(table.links)} `
+    + `WHERE ${table.key} = ?`, this.lastID,
     (err, row) => err ? reject(err) : resolve(row))
 }
 

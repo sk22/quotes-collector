@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import LoggedIn from './logged-in'
 import Login from './login'
 import QuotesList from './quotes-list'
@@ -14,17 +14,30 @@ async function fetchQuotes() {
 const App = () => {
   // States for username and quotes.
   // Get changed by child components and/or the database
-  const [username, setUsername] = useState('')
+  const [user, setUser] = useState(null)
   const [quotes, setQuotes] = useState([])
-  const loggedIn = username.length > 0;
+  const loggedIn = user !== null;
+
+  const handleSetUsername = async username => {
+    const res = await fetch(`/api/users/?u_username=${username}`)
+    const data = (await res.json()).data
+    setUser(data[0])
+  }
 
   useEffect(() => {
     // Run the async function
     fetchQuotes().then(setQuotes)
   }, [])
 
-  const handleAddQuote = (q_text, q_author, q_user) => {
-    setQuotes([{ id: quotes.length + 1, q_text, q_author, q_user, q_votes: 0 }, ...quotes])
+  const handleAddQuote = async (q) => {
+    const res = await fetch(`/api/quotes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(q)
+    })
+
+    const row = (await res.json()).data
+    setQuotes([row, ...quotes])
   }
 
   const handleRemoveQuote = async id => {
@@ -38,17 +51,17 @@ const App = () => {
   }
 
   const handleLogout = () => {
-    setUsername('')
+    setUser(null)
   }
 
   return <>
     {loggedIn
       // depending on if the user is logged in,
       // show different components
-      ? <LoggedIn username={username} onAddQuote={handleAddQuote} onLogout={handleLogout} />
-      : <Login setUsername={setUsername} />}
+      ? <LoggedIn user={user} onAddQuote={handleAddQuote} onLogout={handleLogout} />
+      : <Login setUsername={handleSetUsername} />}
     {/* In every case, the quotes list is shown */}
-    <QuotesList onRemove={handleRemoveQuote} user={username} quotes={quotes} />
+    <QuotesList onRemove={handleRemoveQuote} user={user} quotes={quotes} />
   </>
 }
 

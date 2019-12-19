@@ -1,4 +1,4 @@
-import React, { createRef, useLayoutEffect, useState } from 'react'
+import React, { createRef, useState } from 'react'
 
 const PostQuoteForm = ({ onPost }) => {
   const textRef = createRef()
