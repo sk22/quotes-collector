@@ -42,6 +42,28 @@ const createApi = (db) => ({
     }),
 
   /**
+   * Select rows from table based on query strings
+   */
+  selectFilteredFromTable: (table, query) => 
+    new Promise((resolve, reject) => {
+      const filteredFields = filterInputFields(table, query, true)
+
+      const sql = `SELECT * FROM ${table.name}${formulateLinks(table.links)} `
+      + `WHERE ${filteredFields
+          // if the query values is an array, use its array length, else 1 
+          .map(f => Array(Array.isArray(query[f]) ? query[f].length : 1)
+            // join number of values with sql ors
+            .fill(`${f} = ?`).join(' OR '))
+          // join the different queries with sql ands
+          .join(' AND ')}`
+
+      // use flatMap to flatten the inner arrays of queries with multiple values
+      db.all(sql, filteredFields.flatMap(f => query[f]), function (err, rows) {
+        err ? reject(err) : resolve(rows)
+      })
+    }),
+
+  /**
    * Insert a new row into a table. Only fields defined in the table
    * definition are used.
    */

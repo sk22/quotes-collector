@@ -16,6 +16,7 @@ const db = new Database('./data/quotes.db', err => {
   const {
     selectAllFromTable,
     selectOneFromTable,
+    selectFilteredFromTable,
     insertIntoTable,
     deleteFromTable,
     updateOneInTable
@@ -24,8 +25,14 @@ const db = new Database('./data/quotes.db', err => {
   // for every table, generate the api endpoints
   tables.forEach(table => {
     // get endpoints for querying all rows in a table
+    // also: get endpoints for querying filtered rows based on query values
     app.get(`/api/${table.name}`, (req, res, next) => {
-      selectAllFromTable(table)
+      // detect if there are query values (?field=value)
+      const withQuery = Object.entries(req.query).length > 0
+
+      // determine the function to use based on if there are queries
+      const func = withQuery ? selectFilteredFromTable : selectAllFromTable
+      func(table, req.query)
         .then(rows => res.send({ ok: true, data: rows }))
         .catch(next)
     })
