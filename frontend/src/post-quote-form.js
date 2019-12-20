@@ -1,10 +1,18 @@
-import React, { createRef, useState } from 'react'
+import React, { createRef, useState, useEffect } from 'react'
 
-const PostQuoteForm = ({ onPost }) => {
+const PostQuoteForm = ({ onPost, editQuote }) => {
   const textRef = createRef()
   const authorRef = createRef()
   const [text, setText] = useState('')
   const [author, setAuthor] = useState('')
+
+  // set text and author if a quote to edit is passed
+  useEffect(() => {
+    if (editQuote) {
+      setText(editQuote.q_text)
+      setAuthor(editQuote.q_author)
+    }
+  }, [editQuote])
 
   /** Clears the form and moves the focus. Executed after hitting the submit button. */
   const clearForm = () => {
@@ -45,7 +53,13 @@ const PostQuoteForm = ({ onPost }) => {
         onChange={set(setText, textRef)} value={text} />{' '}
       <input type="text" ref={authorRef} placeholder="Author"
         onChange={set(setAuthor, authorRef)} value={author} />{' '}
-      <input type="submit" disabled={disabled} />
+      <input
+        type="submit"
+        disabled={disabled}
+        value={
+          /* input button value based on whether editing a quote or not */
+          editQuote ? 'Edit' : 'Add'
+        } />
     </form>
   )
 }

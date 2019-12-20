@@ -1,7 +1,7 @@
 import React from 'react'
 import PostQuoteForm from './post-quote-form'
 
-const LoggedIn = ({ onAddQuote, onLogout, user }) => {
+const LoggedIn = ({ onAddQuote, onLogout, user, editQuote }) => {
   const handlePost = (text, author) => {
     onAddQuote({ q_text: text, q_author: author, q_user: user.u_id })
   }
@@ -9,7 +9,7 @@ const LoggedIn = ({ onAddQuote, onLogout, user }) => {
   return <>
     Logged in as {user.u_username}{' '}
     <button onClick={onLogout}>Logout</button><br /><br />
-    <PostQuoteForm onPost={handlePost} />
+    <PostQuoteForm onPost={handlePost} editQuote={editQuote} />
   </>
 }
 

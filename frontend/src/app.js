@@ -16,12 +16,27 @@ const App = () => {
   // Get changed by child components and/or the database
   const [user, setUser] = useState(null)
   const [quotes, setQuotes] = useState([])
+  const [editQuote, setEditQuote] = useState(null)
   const loggedIn = user !== null;
 
   const handleSetUsername = async username => {
     const res = await fetch(`/api/users/?u_username=${username}`)
     const data = (await res.json()).data
-    setUser(data[0])
+    if (data.length > 0) {
+      setUser(data[0])
+    } else {
+      const res = await fetch(`/api/users`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ u_username: username })
+      })
+      const data = (await res.json()).data
+      setUser(data)
+    }
+  }
+
+  const handleEdit = quote => {
+    setEditQuote(quote)
   }
 
   useEffect(() => {
@@ -30,14 +45,20 @@ const App = () => {
   }, [])
 
   const handleAddQuote = async (q) => {
-    const res = await fetch(`/api/quotes`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(q)
-    })
+    const res = await fetch(
+      `/api/quotes${editQuote ? `/${editQuote.q_id}` : ''}`,
+      {
+        method: editQuote ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(q)
+      })
 
     const row = (await res.json()).data
-    setQuotes([row, ...quotes])
+    setQuotes([
+      row,
+      ...quotes.filter(q => editQuote ? q.q_id !== editQuote.q_id : true)
+    ])
+    setEditQuote(null)
   }
 
   const handleRemoveQuote = async id => {
@@ -58,10 +79,18 @@ const App = () => {
     {loggedIn
       // depending on if the user is logged in,
       // show different components
-      ? <LoggedIn user={user} onAddQuote={handleAddQuote} onLogout={handleLogout} />
+      ? <LoggedIn
+          user={user}
+          onAddQuote={handleAddQuote}
+          onLogout={handleLogout}
+          editQuote={editQuote} />
       : <Login setUsername={handleSetUsername} />}
     {/* In every case, the quotes list is shown */}
-    <QuotesList onRemove={handleRemoveQuote} user={user} quotes={quotes} />
+    <QuotesList
+      onRemove={handleRemoveQuote}
+      onEdit={handleEdit}
+      user={user}
+      quotes={quotes} />
   </>
 }
 
