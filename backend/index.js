@@ -57,7 +57,7 @@ const db = new Database('./data/quotes.db', err => {
     // put endpoints for updating existing rows in a table
     app.put(`/api/${table.name}/:id`, (req, res, next) => {
       updateOneInTable(table, req.params.id, req.body)
-        .then(() => res.send({ ok: true }))
+        .then(row => res.send({ ok: true, data: row }))
         .catch(next)
     })
 

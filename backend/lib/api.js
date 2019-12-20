@@ -14,10 +14,10 @@ const filterInputFields = (table, values, keepKey) =>
     // otherwise, only keep the field if it is not the key.
     .filter(f => keepKey || f !== table.key)
 
-const makeCallbackThatGetsLast = (db, table, resolve, reject) => function(err) {
+const makeGetCallback = (db, table, resolve, reject, key) => function(err) {
   if (err) return reject(err)
   db.get(`SELECT * FROM ${table.name}${formulateLinks(table.links)} `
-    + `WHERE ${table.key} = ?`, this.lastID,
+    + `WHERE ${table.key} = ?`, key || this.lastID,
     (err, row) => err ? reject(err) : resolve(row))
 }
 
@@ -82,7 +82,7 @@ const createApi = (db) => ({
       + `VALUES (${Array(filteredFields.length).fill('?').join(', ')})`
 
     db.run(sql, filteredFields.map(f => values[f]),
-      makeCallbackThatGetsLast(db, table, resolve, reject))
+      makeGetCallback(db, table, resolve, reject))
   }),
 
   updateOneInTable: (table, key, values) => new Promise((resolve, reject) => {
@@ -96,7 +96,7 @@ const createApi = (db) => ({
 
     // run the sql statement with the field values and the key
     db.run(sql, [...filteredFields.map(f => values[f]), key],
-      makeCallbackThatGetsLast(db, table, resolve, reject))
+      makeGetCallback(db, table, resolve, reject, key))
   }),
 
   /**
