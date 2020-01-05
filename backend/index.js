@@ -2,11 +2,15 @@ const express = require('express')
 const { json } = require('body-parser')
 const tables = require('./lib/tables')
 const createApi = require('./lib/api')
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
 
 const { Database } = require('sqlite3').verbose()
 const app = express()
 // use a json parser to handle the json post requests
 app.use(json())
+
+const createToken = id => jwt.sign(id, 'geheimnis oida')
 
 const db = new Database('./data/quotes.db', err => {
   // output connection errors to the console
@@ -21,6 +25,59 @@ const db = new Database('./data/quotes.db', err => {
     deleteFromTable,
     updateOneInTable
   } = createApi(db)
+
+  // the users table to be used by the authentication endpoints
+  const usersTable = tables.find(t => t.name === 'users')
+
+  /**
+   * Returns a function that finishes the login by generating a token and
+   * sending the username and token as the HTTP response. After that, it
+   * updates the token in the database.
+   */
+  const makeLoginFinisher = res => ({ u_id, u_username }) => {
+    const u_token = createToken(u_id)
+    res.status(201).send({ ok: true, data: { u_username, u_token } })
+    updateOneInTable(usersTable, u_id, { u_token })
+  }
+
+  // register endpoint: creates a user and generates a token
+  app.post('/api/register', (req, res, next) => {
+    // request body has username and password
+    const { username: u_username, password } = req.body
+    // create the hashed password to be stored in the database (salt value: 8)
+    const u_password = bcrypt.hashSync(password, 8)
+
+    // save the user to the table
+    insertIntoTable(usersTable, { u_username, u_password })
+      // use the returned row's id and let the login finisher function
+      // generate the token, return and save it
+      .then(makeLoginFinisher(res))
+      .catch(next)
+  })
+
+  // login endpoint: generates a token for an existing user
+  app.post('/api/login', (req, res, next) => {
+    // initialize generalized function that will return using the res object
+    const finishLogin = makeLoginFinisher(res)
+    // request body has username and password
+    const { username, password } = req.body
+
+    // select the user row based on the given username
+    selectFilteredFromTable(usersTable, { u_username: username })
+      .then(rows => {
+        // return 404 if no row has been found
+        if (rows.length === 0) return res.sendStatus(404)
+        // get the user data from the returned user row
+        const { u_id, u_username, u_password } = rows[0]
+        // compare the given password to the stored password hash
+        const valid = bcrypt.compareSync(password, u_password);
+        // return 401 (unauthorized) if the passwords do not match
+        if (!valid) return res.sendStatus(401)
+        // call the function that generates, returns and saves the token
+        finishLogin({ u_id, u_username, u_password })
+      })
+      .catch(next)
+  })
 
   // for every table, generate the api endpoints
   tables.forEach(table => {

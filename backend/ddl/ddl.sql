@@ -8,7 +8,9 @@ create table quotes (
 
 create table users (
   u_id integer primary key autoincrement,
-  u_username text not null
+  u_username text not null unique,
+  u_password text not null,
+  u_token text
 );
 
 create table votes (

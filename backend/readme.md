@@ -14,4 +14,10 @@ curl -i -X PUT \
   http://localhost:3001/api/quotes/1
 
 curl -X DELETE http://localhost:3001/api/votes/1
+
+curl -i -X POST \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
+  -d '{"username": "root", "password": "root"}' \
+  http://localhost:3001/api/login
 ```
