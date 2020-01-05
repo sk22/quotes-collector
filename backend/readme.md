@@ -9,6 +9,7 @@ curl -i -X POST \
 
 curl -i -X PUT \
   -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer ...' \
   -H 'Accept: application/json' \
   -d '{"q_text": "was weiß ich"}' \
   http://localhost:3001/api/quotes/1

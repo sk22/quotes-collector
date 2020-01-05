@@ -17,20 +17,27 @@ const App = () => {
   const [user, setUser] = useState(null)
   const [quotes, setQuotes] = useState([])
   const [editQuote, setEditQuote] = useState(null)
+  const [passwordWrong, setPasswordWrong] = useState(false)
+  const [register, setRegister] = useState(false)
   const loggedIn = user !== null;
 
-  const handleSetUsername = async username => {
-    const res = await fetch(`/api/users/?u_username=${username}`)
-    const data = (await res.json()).data
-    if (data.length > 0) {
-      setUser(data[0])
+  const handleLogin = async (username, password, register) => {
+    setPasswordWrong(false)
+    setRegister(false)
+    const res = await fetch(`/api/${register ? 'register' : 'login'}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    })
+    if (res.status === 401) {
+      // password wrong
+      setPasswordWrong(true)
+    } else if (res.status === 404) {
+      // user does not exist
+      setRegister(true)
     } else {
-      const res = await fetch(`/api/users`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ u_username: username })
-      })
       const data = (await res.json()).data
+      console.log(data)
       setUser(data)
     }
   }
@@ -49,7 +56,10 @@ const App = () => {
       `/api/quotes${editQuote ? `/${editQuote.q_id}` : ''}`,
       {
         method: editQuote ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.u_token}`
+        },
         body: JSON.stringify(q)
       })
 
@@ -84,7 +94,10 @@ const App = () => {
           onAddQuote={handleAddQuote}
           onLogout={handleLogout}
           editQuote={editQuote} />
-      : <Login setUsername={handleSetUsername} />}
+      : <Login
+          onLogin={handleLogin}
+          passwordWrong={passwordWrong}
+          register={register} />}
     {/* In every case, the quotes list is shown */}
     <QuotesList
       onRemove={handleRemoveQuote}

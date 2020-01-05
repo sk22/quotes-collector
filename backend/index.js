@@ -34,9 +34,10 @@ const db = new Database('./data/quotes.db', err => {
    * sending the username and token as the HTTP response. After that, it
    * updates the token in the database.
    */
-  const makeLoginFinisher = res => ({ u_id, u_username }) => {
+  const makeLoginFinisher = (res, created) => ({ u_id, u_username }) => {
     const u_token = createToken(u_id)
-    res.status(201).send({ ok: true, data: { u_username, u_token } })
+    res.status(created ? 201 : 200)
+      .send({ ok: true, data: { u_id, u_username, u_token } })
     updateOneInTable(usersTable, u_id, { u_token })
   }
 
@@ -51,7 +52,7 @@ const db = new Database('./data/quotes.db', err => {
     insertIntoTable(usersTable, { u_username, u_password })
       // use the returned row's id and let the login finisher function
       // generate the token, return and save it
-      .then(makeLoginFinisher(res))
+      .then(makeLoginFinisher(res, true))
       .catch(next)
   })
 
@@ -79,6 +80,17 @@ const db = new Database('./data/quotes.db', err => {
       .catch(next)
   })
 
+  const auth = (req, res, next) => {
+    if (!req.headers['authorization']) {
+      const error = new Error('Forbidden')
+      error.status = 403
+      throw error
+    }
+    const token = req.headers['authorization'].slice(7)
+    req.auth = jwt.verify(token, 'geheimnis oida')
+    next()
+  }
+
   // for every table, generate the api endpoints
   tables.forEach(table => {
     // get endpoints for querying all rows in a table
@@ -105,8 +117,8 @@ const db = new Database('./data/quotes.db', err => {
     })
 
     // post endpoints for creating new rows in a table
-    app.post(`/api/${table.name}`, (req, res, next) => {
-      insertIntoTable(table, req.body)
+    app.post(`/api/${table.name}`, auth, (req, res, next) => {
+      insertIntoTable(table, { ...req.body, [table.auth]: req.auth })
         .then(row => res.status(201).send({ ok: true, data: row }))
         .catch(next)
     })

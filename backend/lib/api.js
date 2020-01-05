@@ -3,6 +3,8 @@
  */
 const formulateLinks = links => links ? ` INNER JOIN ${links.join(', ')}` : ''
 
+const formulatePublicFields = table => (table.public || table.fields).join(', ')
+
 /**
  * Filter given fields to only return fields that are part of the table.
  */
@@ -10,13 +12,18 @@ const filterInputFields = (table, values, keepKey) =>
   Object.keys(values)
     // only keep the fields that are defined by the table
     .filter(f => table.fields.includes(f))
+    .filter(f => !table.hidden || !table.hidden.includes(f))
     // if the keepKey argument is set, keep the field.
     // otherwise, only keep the field if it is not the key.
     .filter(f => keepKey || f !== table.key)
 
 const makeGetCallback = (db, table, resolve, reject, key) => function(err) {
   if (err) return reject(err)
-  db.get(`SELECT * FROM ${table.name}${formulateLinks(table.links)} `
+
+  console.log(formulatePublicFields(table))
+  
+  db.get(`SELECT ${formulatePublicFields(table)} `
+    + `FROM ${table.name}${formulateLinks(table.links)} `
     + `WHERE ${table.key} = ?`, key || this.lastID,
     (err, row) => err ? reject(err) : resolve(row))
 }
@@ -29,8 +36,10 @@ const createApi = (db) => ({
    * Select all rows from a table.
    * Includes joins defined in the table definition.
    */
-  selectAllFromTable: ({ name, links }) => new Promise((resolve, reject) => {
-    db.all(`SELECT * FROM ${name}${formulateLinks(links)}`, (err, rows) => {
+  selectAllFromTable: table => new Promise((resolve, reject) => {
+    const { name, links } = table
+    db.all(`SELECT ${formulatePublicFields(table)} `
+      + `FROM ${name}${formulateLinks(links)}`, (err, rows) => {
       err ? reject(err) : resolve(rows)
     })
   }),
@@ -38,9 +47,11 @@ const createApi = (db) => ({
   /**
    * Select one specific row from a table based on the ID
    */
-  selectOneFromTable: ({ name, key, links }, id) =>
+  selectOneFromTable: (table, id) =>
     new Promise((resolve, reject) => {
-      db.get(`SELECT * FROM ${name}${formulateLinks(links)} `
+      const { name, key, links } = table
+      db.get(`SELECT ${formulatePublicFields(table)} `
+        + `FROM ${name}${formulateLinks(links)} `
         + `WHERE ${key} = ?`, [id], (err, row) => {
           // return null if row returned is undefined
           // (to be more explicit about the 404 error)
@@ -55,8 +66,9 @@ const createApi = (db) => ({
     new Promise((resolve, reject) => {
       const filteredFields = filterInputFields(table, query, true)
 
-      const sql = `SELECT * FROM ${table.name}${formulateLinks(table.links)} `
-      + `WHERE ${filteredFields
+      const sql = `SELECT ${formulatePublicFields(table)} `
+        + `FROM ${table.name}${formulateLinks(table.links)} `
+        + `WHERE ${filteredFields
           // if the query values is an array, use its array length, else 1 
           .map(f => Array(Array.isArray(query[f]) ? query[f].length : 1)
             // join number of values with sql ors
