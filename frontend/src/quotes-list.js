@@ -1,8 +1,36 @@
 import React, { useState } from 'react'
 import styled from 'styled-components'
 
+import Button from './components/button'
+
 const QuoteStyle = styled.div`
   /* todo: style quotes */
+  & blockquote {
+    margin-top: 0;
+    & p {
+      margin-top: 0;
+    }
+  }
+  
+  box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+  padding: 1rem;
+  margin: 1rem;
+  `
+  
+const List = styled.ul`
+  padding: 0;
+`
+
+const VoteButtons = styled.div`
+  display: inline-flex;
+  flex-direction: column;
+  & > * + * {
+    margin-top: 0.3rem;
+  }
+`
+
+const Flex = styled.div`
+  display: flex;
 `
 
 const voteSumReducer = (acc, v) => acc + v.v_vote
@@ -20,19 +48,25 @@ const Quote = ({
   const sum = q.votes.reduce(voteSumReducer, 0)
 
   return <QuoteStyle>
-    <blockquote>
-      <p>{q.q_text}</p>
-      <i>— {q.q_author}</i>
-    </blockquote>
-    {showVote &&
-      <>
-        <button onClick={() => onDownvote(currentVote)}>-</button>{' '}
-        <button onClick={() => onUpvote(currentVote)}>+</button>{' '}
-      </>}
-    <span className="votes">
+    <Flex>
+      {showVote &&
+        <VoteButtons>
+          <Button
+            active={currentVote && currentVote.v_vote > 0}
+            onClick={() => onUpvote(currentVote)}>+</Button>{' '}
+          <Button
+            active={currentVote && currentVote.v_vote < 0}
+            onClick={() => onDownvote(currentVote)}>–</Button>{' '}
+        </VoteButtons>}
+      <blockquote>
+        <p>{q.q_text}</p>
+        <i>— {q.q_author}</i>
+      </blockquote>
+    </Flex>
+    <small className="votes">
       {sum > 0 ? '+' : ''}{sum}
-    </span>,{' '}
-    <span className="user">posted by {q.u_username}</span>
+    </small>,{' '}
+    <small className="user">posted by {q.u_username}</small>
     {showAdmin &&
       <>{' '}
         <button onClick={() => onRemove(q.q_id)}>remove</button>{' '}
@@ -65,7 +99,7 @@ const QuotesList = ({ quotes, user, onRemove, onEdit, onVote }) => {
       <button onClick={() => onClickSortBy('latest')}>latest</button>{', '}
       <button onClick={() => onClickSortBy('votes')}>votes</button>
     </p>
-    <ul>
+    <List>
       {quotes.sort(sortMethods[sortBy] || defaultSortMethod).map(q => {
         const userVote = user ? q.votes.find(v => v.v_user === user.u_id) : null
         return (
@@ -81,7 +115,7 @@ const QuotesList = ({ quotes, user, onRemove, onEdit, onVote }) => {
             currentVote={userVote} />
         )
       })}
-    </ul>
+    </List>
   </>
 }
 
