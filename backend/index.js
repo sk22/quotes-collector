@@ -23,7 +23,8 @@ const db = new Database('./data/quotes.db', err => {
     selectFilteredFromTable,
     insertIntoTable,
     deleteFromTable,
-    updateOneInTable
+    updateOneInTable,
+    selectFullUserByUsername
   } = createApi(db)
 
   // the users table to be used by the authentication endpoints
@@ -64,12 +65,12 @@ const db = new Database('./data/quotes.db', err => {
     const { username, password } = req.body
 
     // select the user row based on the given username
-    selectFilteredFromTable(usersTable, { u_username: username })
-      .then(rows => {
+    selectFullUserByUsername(username)
+      .then(row => {
         // return 404 if no row has been found
-        if (rows.length === 0) return res.sendStatus(404)
+        if (row === null) return res.sendStatus(404)
         // get the user data from the returned user row
-        const { u_id, u_username, u_password } = rows[0]
+        const { u_id, u_username, u_password } = row
         // compare the given password to the stored password hash
         const valid = bcrypt.compareSync(password, u_password);
         // return 401 (unauthorized) if the passwords do not match

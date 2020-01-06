@@ -1,7 +1,9 @@
 /**
  * Helper method to create the SQL code for the inner joins.
  */
-const formulateLinks = links => links ? ` INNER JOIN ${links.join(', ')}` : ''
+const formulateLinks = links => links ? Object.keys(links)
+  .flatMap(type => ` ${type} join ` + links[type].join(', ')).join(' ')
+  : ''
 
 const formulatePublicFields = table => (table.public || table.fields).join(', ')
 
@@ -12,15 +14,13 @@ const filterInputFields = (table, values, keepKey) =>
   Object.keys(values)
     // only keep the fields that are defined by the table
     .filter(f => table.fields.includes(f))
-    .filter(f => !table.hidden || !table.hidden.includes(f))
+    .filter(f => !table.hidden || !table.hiddGeten.includes(f))
     // if the keepKey argument is set, keep the field.
     // otherwise, only keep the field if it is not the key.
     .filter(f => keepKey || f !== table.key)
 
 const makeGetCallback = (db, table, resolve, reject, key) => function(err) {
   if (err) return reject(err)
-
-  console.log(formulatePublicFields(table))
   
   db.get(`SELECT ${formulatePublicFields(table)} `
     + `FROM ${table.name}${formulateLinks(table.links)} `
@@ -37,10 +37,11 @@ const createApi = (db) => ({
    * Includes joins defined in the table definition.
    */
   selectAllFromTable: table => new Promise((resolve, reject) => {
-    const { name, links } = table
-    db.all(`SELECT ${formulatePublicFields(table)} `
-      + `FROM ${name}${formulateLinks(links)}`, (err, rows) => {
-      err ? reject(err) : resolve(rows)
+    const { name, links, key } = table
+    const sql = `SELECT ${formulatePublicFields(table)} `
+    + `FROM ${name}${formulateLinks(links)}`
+    db.all(sql, (err, rows) => {
+      err ? reject(err) : resolve(rows.filter(r => r[key] !== null))
     })
   }),
 
@@ -57,6 +58,12 @@ const createApi = (db) => ({
           // (to be more explicit about the 404 error)
           err ? reject(err) : resolve(row || null)
         })
+    }),
+
+  selectFullUserByUsername: (username) =>
+    new Promise((resolve, reject) => {
+      db.get(`SELECT * FROM users WHERE u_username = ?`, [username],
+        (err, row) => err ? reject(err) : resolve(row || null))
     }),
 
   /**

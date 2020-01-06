@@ -10,12 +10,18 @@ async function fetchQuotes() {
   return (await res.json()).data
 }
 
+async function fetchVotes() {
+  const res = await fetch(`/api/votes/`)
+  return (await res.json()).data
+}
+
 /** Root component that gets rendered onto the page */
 const App = () => {
   // States for username and quotes.
   // Get changed by child components and/or the database
   const [user, setUser] = useState(null)
   const [quotes, setQuotes] = useState([])
+  const [votes, setVotes] = useState(null)
   const [editQuote, setEditQuote] = useState(null)
   const [passwordWrong, setPasswordWrong] = useState(false)
   const [register, setRegister] = useState(false)
@@ -39,6 +45,7 @@ const App = () => {
       const data = (await res.json()).data
       console.log(data)
       setUser(data)
+      fetchVotes().then(setVotes)
     }
   }
 
@@ -49,6 +56,7 @@ const App = () => {
   useEffect(() => {
     // Run the async function
     fetchQuotes().then(setQuotes)
+    fetchVotes().then(setVotes)
   }, [])
 
   const handleAddQuote = async (q) => {
@@ -72,7 +80,6 @@ const App = () => {
   }
 
   const handleRemoveQuote = async id => {
-    // todo: api call
     try {
       await fetch(`/api/quotes/${id}`, { method: 'DELETE' })
       setQuotes(quotes.filter(q => q.q_id !== id))
@@ -83,6 +90,33 @@ const App = () => {
 
   const handleLogout = () => {
     setUser(null)
+  }
+
+  const handleVote = async (q_id, value, voteRow) => {
+    try {
+      const del = voteRow && value === voteRow.v_vote
+      const res = await fetch(`/api/votes/${voteRow ? voteRow.v_id : ''}`, {
+        method: voteRow ? (del ? 'DELETE' : 'PUT') : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.u_token}`
+        },
+        body: JSON.stringify({
+          v_quote: q_id,
+          v_user: user.u_id,
+          v_vote: value > 0 ? true : false
+        })
+      })
+
+      if (del) {
+        setVotes(votes.filter(v => v.v_id !== voteRow.v_id))
+      } else {
+        const data = (await res.json()).data
+        setVotes([...votes.filter(v => v.v_id !== data.v_id), data])
+      }
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   return <>
@@ -103,7 +137,15 @@ const App = () => {
       onRemove={handleRemoveQuote}
       onEdit={handleEdit}
       user={user}
-      quotes={quotes} />
+      onVote={handleVote}
+      quotes={quotes.map(q => ({
+        votes: votes
+          ? votes.filter(v => v.v_quote === q.q_id).map(({ v_vote, ...v }) =>
+              ({ v_vote: v_vote === 0 ? -1 : 1, ...v }))
+          : [],
+        ...q
+      }))}
+    />
   </>
 }
 

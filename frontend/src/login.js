@@ -12,8 +12,9 @@ const Login = ({ onLogin, register, passwordWrong }) => {
     e.preventDefault()
     // only check if password matches if used to register
     if (register) {
-      setMatches(passwordRef.current.value === passwordRepeatRef.current.value)
-      if (!matches) return
+      const m = passwordRef.current.value === passwordRepeatRef.current.value
+      setMatches(m)
+      if (!m) return
     }
     onLogin(usernameRef.current.value, passwordRef.current.value, register)
   }
