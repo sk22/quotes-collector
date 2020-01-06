@@ -18,7 +18,7 @@ const PostQuoteForm = ({ onPost, editQuote }) => {
   const clearForm = () => {
     setText('')
     // setAuthor('')
-    // Not clearing the author because one might want to save mutlipel quotes by
+    // Not clearing the author because one might want to save mutliple quotes by
     // one author. Pressing tab selects all text, so clearing the input has no benefit anyway.
     textRef.current.focus()
   }
@@ -26,6 +26,7 @@ const PostQuoteForm = ({ onPost, editQuote }) => {
   /** Handles the press of the submit button by passing the data to parent component */
   const handleSubmit = e => {
     e.preventDefault()
+    if (editQuote) setAuthor('')
     onPost(textRef.current.value, authorRef.current.value)
     clearForm()
   }
@@ -49,9 +50,9 @@ const PostQuoteForm = ({ onPost, editQuote }) => {
   
   return (
     <form onSubmit={handleSubmit}>
-      <input type="text" ref={textRef} placeholder="Text"
-        onChange={set(setText, textRef)} value={text} />{' '}
-      <input type="text" ref={authorRef} placeholder="Author"
+      <textarea ref={textRef} placeholder="Text"
+        onChange={set(setText, textRef)} value={text} /><br />
+      <input ref={authorRef} placeholder="Author"
         onChange={set(setAuthor, authorRef)} value={author} />{' '}
       <input
         type="submit"

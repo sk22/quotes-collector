@@ -59,7 +59,7 @@ const Quote = ({
             onClick={() => onDownvote(currentVote)}>–</Button>{' '}
         </VoteButtons>}
       <blockquote>
-        <p>{q.q_text}</p>
+        <p>{q.q_text.split('\n').map(line => <>{line}<br /></>)}</p>
         <i>— {q.q_author}</i>
       </blockquote>
     </Flex>
@@ -86,7 +86,7 @@ const sortMethods = {
 const QuotesList = ({ quotes, user, onRemove, onEdit, onVote }) => {
   const [sortBy, setSortBy] =
     useState(window.location.hash.slice(1) || 'latest')
-  const defaultSortMethod = sortBy['id']
+  const defaultSortMethod = sortBy['latest']
 
   const onClickSortBy = by => {
     setSortBy(by)

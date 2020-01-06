@@ -21,10 +21,10 @@ const Login = ({ onLogin, register, passwordWrong }) => {
 
   return <form onSubmit={handleSubmit}>
     <input ref={usernameRef} placeholder="Username..." />{' '}
-    <input ref={passwordRef} placeholder="Password..." />{' '}
+    <input type="password"ref={passwordRef} placeholder="Password..." />{' '}
     {register && <>
       <input
-        ref={passwordRepeatRef}
+        ref={passwordRepeatRef} type="password"
         placeholder="Repeat password..." />{' '}
     </>}
     <input type="submit" value={register ? 'Register' : 'Login'} />
