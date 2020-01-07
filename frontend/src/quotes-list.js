@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import styled from 'styled-components'
 
-import Button from './components/button'
+import { Button } from './components/forms'
 
 const QuoteStyle = styled.div`
   /* todo: style quotes */
@@ -11,10 +11,13 @@ const QuoteStyle = styled.div`
       margin-top: 0;
     }
   }
-  
-  box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+
+  background: white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+  border-radius: 0.5rem;
+  border: var(--primary-border);
   padding: 1rem;
-  margin: 1rem;
+  margin: 1rem 0;
   `
   
 const List = styled.ul`
@@ -69,8 +72,8 @@ const Quote = ({
     <small className="user">posted by {q.u_username}</small>
     {showAdmin &&
       <>{' '}
-        <button onClick={() => onRemove(q.q_id)}>remove</button>{' '}
-        <button onClick={() => onEdit(q)}>edit</button>
+        <Button onClick={() => onRemove(q.q_id)}>remove</Button>{' '}
+        <Button onClick={() => onEdit(q)}>edit</Button>
       </>}
   </QuoteStyle>
 }
@@ -84,8 +87,9 @@ const sortMethods = {
 }
 
 const QuotesList = ({ quotes, user, onRemove, onEdit, onVote }) => {
+  const hashSlice = window.location.hash.slice(1)
   const [sortBy, setSortBy] =
-    useState(window.location.hash.slice(1) || 'latest')
+    useState(hashSlice in sortMethods ? hashSlice : 'latest')
   const defaultSortMethod = sortBy['latest']
 
   const onClickSortBy = by => {
@@ -96,8 +100,12 @@ const QuotesList = ({ quotes, user, onRemove, onEdit, onVote }) => {
   return <>
     <p>
       Sort by{' '}
-      <button onClick={() => onClickSortBy('latest')}>latest</button>{', '}
-      <button onClick={() => onClickSortBy('votes')}>votes</button>
+      <Button
+        active={sortBy === 'latest'}
+        onClick={() => onClickSortBy('latest')}>latest</Button>{', '}
+      <Button
+        active={sortBy === 'votes'}
+        onClick={() => onClickSortBy('votes')}>votes</Button>
     </p>
     <List>
       {quotes.sort(sortMethods[sortBy] || defaultSortMethod).map(q => {
@@ -116,6 +124,7 @@ const QuotesList = ({ quotes, user, onRemove, onEdit, onVote }) => {
         )
       })}
     </List>
+    <i>{quotes.length} quotes</i>
   </>
 }
 

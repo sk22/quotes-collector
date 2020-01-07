@@ -1,4 +1,31 @@
 import React, { createRef, useState, useEffect } from 'react'
+import { Input, Button, TextArea } from './components/forms'
+import styled from 'styled-components'
+
+const PostQuoteFormStyle = styled.form`
+  display: flex;
+  align-items: stretch;
+  > * + * {
+    margin-left: 0.3rem;
+  }
+
+  & ${TextArea} {
+    flex: 1;
+    min-height: 3rem;
+    height: 5rem;
+  }
+`
+
+const VerticalFlex = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  & ${Input} {
+    flex: 1;
+    margin-bottom: 0.3rem;
+  }
+`
 
 const PostQuoteForm = ({ onPost, editQuote }) => {
   const textRef = createRef()
@@ -49,19 +76,20 @@ const PostQuoteForm = ({ onPost, editQuote }) => {
   const disabled = [text, author].some(t => t.trim().length === 0)
   
   return (
-    <form onSubmit={handleSubmit}>
-      <textarea ref={textRef} placeholder="Text"
-        onChange={set(setText, textRef)} value={text} /><br />
-      <input ref={authorRef} placeholder="Author"
-        onChange={set(setAuthor, authorRef)} value={author} />{' '}
-      <input
-        type="submit"
-        disabled={disabled}
-        value={
+    <PostQuoteFormStyle onSubmit={handleSubmit}>
+      <TextArea ref={textRef} placeholder="Text"
+        onChange={set(setText, textRef)} value={text} />
+      <VerticalFlex>
+        <Input ref={authorRef} placeholder="Author"
+          onChange={set(setAuthor, authorRef)} value={author} />
+        <Button
+          type="submit"
+          disabled={disabled}>{
           /* input button value based on whether editing a quote or not */
           editQuote ? 'Edit' : 'Add'
-        } />
-    </form>
+        }</Button>
+      </VerticalFlex>
+    </PostQuoteFormStyle>
   )
 }
 

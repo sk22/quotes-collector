@@ -1,4 +1,5 @@
 import React, { createRef, useState } from 'react'
+import { Input, Button } from './components/forms'
 
 /** Component that is shown to users that are not yet logged in */
 const Login = ({ onLogin, register, passwordWrong }) => {
@@ -19,15 +20,15 @@ const Login = ({ onLogin, register, passwordWrong }) => {
     onLogin(usernameRef.current.value, passwordRef.current.value, register)
   }
 
-  return <form onSubmit={handleSubmit}>
-    <input ref={usernameRef} placeholder="Username..." />{' '}
-    <input type="password"ref={passwordRef} placeholder="Password..." />{' '}
+  return <form>
+    <Input ref={usernameRef} placeholder="Username..." />{' '}
+    <Input type="password"ref={passwordRef} placeholder="Password..." />{' '}
     {register && <>
-      <input
+      <Input
         ref={passwordRepeatRef} type="password"
         placeholder="Repeat password..." />{' '}
     </>}
-    <input type="submit" value={register ? 'Register' : 'Login'} />
+    <Button onClick={handleSubmit}>{register ? 'Register' : 'Login'}</Button>
     {register && !matches && <>
       <br />
       <span>Password does not match!</span>

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import LoggedIn from './logged-in'
 import Login from './login'
 import QuotesList from './quotes-list'
+import Divider from './components/divider'
+import Container from './components/container'
 
 /** Function that fetches the quote data from the backend */
 async function fetchQuotes() {
@@ -119,7 +121,7 @@ const App = () => {
     }
   }
 
-  return <>
+  return <Container>
     {loggedIn
       // depending on if the user is logged in,
       // show different components
@@ -133,6 +135,7 @@ const App = () => {
           passwordWrong={passwordWrong}
           register={register} />}
     {/* In every case, the quotes list is shown */}
+    <Divider />
     <QuotesList
       onRemove={handleRemoveQuote}
       onEdit={handleEdit}
@@ -146,7 +149,7 @@ const App = () => {
         ...q
       }))}
     />
-  </>
+  </Container>
 }
 
 export default App;

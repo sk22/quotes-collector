@@ -1,0 +1,8 @@
+body {
+  background: #f1f1f1;
+}
+
+:root {
+  --primary-color: #277ae1;
+  --primary-border: 0.08rem solid var(--primary-color);
+}
