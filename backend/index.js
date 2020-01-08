@@ -10,7 +10,9 @@ const app = express()
 // use a json parser to handle the json post requests
 app.use(json())
 
-const createToken = id => jwt.sign(id, 'geheimnis oida')
+const createToken = id => jwt.sign({ id }, 'geheimnis oida', {
+  expiresIn: '24h'
+})
 
 const db = new Database('./data/quotes.db', err => {
   // output connection errors to the console
@@ -88,8 +90,9 @@ const db = new Database('./data/quotes.db', err => {
       throw error
     }
     const token = req.headers['authorization'].slice(7)
-    // decoded jwt is the user id (which is a number)
-    req.auth = Number(jwt.verify(token, 'geheimnis oida'))
+    // decoded jwt has user id
+    const { id } = jwt.verify(token, 'geheimnis oida')
+    req.auth = id
     next()
   }
 
@@ -136,7 +139,12 @@ const db = new Database('./data/quotes.db', err => {
     app.delete(`/api/${table.name}/:id`, auth, (req, res, next) => {
       selectOneFromTable(table, req.params.id)
         .then(row => {
-          if (row[table.auth] !== req.auth) {
+          if (!row) {
+            // row is null -> 404
+            const error = new Error('Not Found')
+            error.status = 404
+            throw error
+          } else if (row[table.auth] !== req.auth) {
             // if the row's user does not match the authorized user,
             // return an error 401
             const error = new Error('Unauthorized')
