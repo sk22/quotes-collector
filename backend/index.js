@@ -88,7 +88,8 @@ const db = new Database('./data/quotes.db', err => {
       throw error
     }
     const token = req.headers['authorization'].slice(7)
-    req.auth = jwt.verify(token, 'geheimnis oida')
+    // decoded jwt is the user id (which is a number)
+    req.auth = Number(jwt.verify(token, 'geheimnis oida'))
     next()
   }
 
@@ -132,9 +133,22 @@ const db = new Database('./data/quotes.db', err => {
     })
 
     // delete endpoints for deleting specific rows from a table
-    app.delete(`/api/${table.name}/:id`, (req, res, next) => {
-      deleteFromTable(table, req.params.id)
-        .then(() => res.send({ ok: true }))
+    app.delete(`/api/${table.name}/:id`, auth, (req, res, next) => {
+      selectOneFromTable(table, req.params.id)
+        .then(row => {
+          if (row[table.auth] !== req.auth) {
+            // if the row's user does not match the authorized user,
+            // return an error 401
+            const error = new Error('Unauthorized')
+            error.status = 401
+            throw error
+          } else {
+            // else, delete the row
+            deleteFromTable(table, req.params.id)
+              .then(() => res.send({ ok: true }))
+              .catch(next)
+          }
+        })
         .catch(next)
     })
   })

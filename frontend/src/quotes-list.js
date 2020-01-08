@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, Fragment } from 'react'
 import styled from 'styled-components'
 
 import { Button } from './components/forms'
@@ -62,7 +62,12 @@ const Quote = ({
             onClick={() => onDownvote(currentVote)}>–</Button>{' '}
         </VoteButtons>}
       <blockquote>
-        <p>{q.q_text.split('\n').map(line => <>{line}<br /></>)}</p>
+        <p>{q.q_text
+          // line breaks don't have an effect in html
+          .split('\n')
+          // thus adding <br> elements after each line
+          .map((line, i) => <Fragment key={i}>{line}<br /></Fragment>)
+          }</p>
         <i>— {q.q_author}</i>
       </blockquote>
     </Flex>
@@ -117,10 +122,10 @@ const QuotesList = ({ quotes, user, onRemove, onEdit, onVote }) => {
             onEdit={onEdit}
             onUpvote={id => onVote(q.q_id, +1, id)}
             onDownvote={id => onVote(q.q_id, -1, id)}
-            showAdmin={user && user.u_id === q.q_user}
-            showVote={user !== null}
+            showAdmin={user && user.u_id === q.q_user /* only for the poster */}
+            showVote={user !== null /* every user can vote on quotes */}
             quote={q} 
-            currentVote={userVote} />
+            currentVote={userVote /* used for the color and the api call */} />
         )
       })}
     </List>
