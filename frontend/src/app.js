@@ -77,6 +77,14 @@ const App = () => {
     fetchVotes().then(setVotes)
   }, [])
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchQuotes().then(setQuotes)
+      fetchVotes().then(setVotes)
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   /**
    * Handles adding a quote. Depending on the context, an existing quote can
    * also be edited. 
@@ -172,6 +180,8 @@ const App = () => {
       console.error(e)
     }
   }
+
+  
 
   return <Container>
     {loggedIn
