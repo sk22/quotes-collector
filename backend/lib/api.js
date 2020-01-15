@@ -14,7 +14,7 @@ const filterInputFields = (table, values, keepKey) =>
   Object.keys(values)
     // only keep the fields that are defined by the table
     .filter(f => table.fields.includes(f))
-    .filter(f => !table.hidden || !table.hiddGeten.includes(f))
+    .filter(f => !table.hidden || !table.hidden.includes(f))
     // if the keepKey argument is set, keep the field.
     // otherwise, only keep the field if it is not the key.
     .filter(f => keepKey || f !== table.key)
