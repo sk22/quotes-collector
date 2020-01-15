@@ -7,7 +7,6 @@
     "build": "npm-run-all --parallel build:*",
     "build:frontend": "npm run build --prefix frontend",
     "start": "npm-run-all --parallel start:*",
-    "start:frontend": "npm start --prefix frontend",
     "start:backend": "npm start --prefix backend",
     "dev": "npm-run-all --parallel dev:*",
     "dev:frontend": "npm run dev --prefix frontend",

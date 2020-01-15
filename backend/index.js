@@ -1,9 +1,9 @@
 const express = require('express')
 const { json } = require('body-parser')
-const tables = require('./lib/tables')
-const createApi = require('./lib/api')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+const tables = require('./lib/tables')
+const createApi = require('./lib/api')
 
 const { Database } = require('sqlite3').verbose()
 const app = express()
@@ -13,6 +13,12 @@ app.use(json())
 const createToken = id => jwt.sign({ id }, 'geheimnis oida', {
   expiresIn: '24h'
 })
+
+const createHttpError = (status, text) => {
+  const error = new Error(text)
+  error.status = status
+  return error
+}
 
 const db = new Database('./data/quotes.db', err => {
   // output connection errors to the console
@@ -70,13 +76,15 @@ const db = new Database('./data/quotes.db', err => {
     selectFullUserByUsername(username)
       .then(row => {
         // return 404 if no row has been found
-        if (row === null) return res.sendStatus(404)
+        if (row === null) {
+          throw createHttpError(404, 'Not Found')
+        }
         // get the user data from the returned user row
         const { u_id, u_username, u_password } = row
         // compare the given password to the stored password hash
         const valid = bcrypt.compareSync(password, u_password);
         // return 401 (unauthorized) if the passwords do not match
-        if (!valid) return res.sendStatus(401)
+        if (!valid) throw createHttpError(401, 'Unauthorized')
         // call the function that generates, returns and saves the token
         finishLogin({ u_id, u_username, u_password })
       })
@@ -85,9 +93,7 @@ const db = new Database('./data/quotes.db', err => {
 
   const auth = (req, res, next) => {
     if (!req.headers['authorization']) {
-      const error = new Error('Forbidden')
-      error.status = 403
-      throw error
+      throw createHttpError(403, 'Forbidden')
     }
     const token = req.headers['authorization'].slice(7)
     // decoded jwt has user id
@@ -141,15 +147,11 @@ const db = new Database('./data/quotes.db', err => {
         .then(row => {
           if (!row) {
             // row is null -> 404
-            const error = new Error('Not Found')
-            error.status = 404
-            throw error
+            throw createHttpError(404, 'Not Found')
           } else if (row[table.auth] !== req.auth) {
             // if the row's user does not match the authorized user,
             // return an error 401
-            const error = new Error('Unauthorized')
-            error.status = 401
-            throw error
+            throw createHttpError(401, 'Unauthorized')
           } else {
             // else, delete the row
             deleteFromTable(table, req.params.id)
@@ -167,9 +169,18 @@ const db = new Database('./data/quotes.db', err => {
     res.status(err.status || 500).send({ ok: false, error: err.message });
   })
   
-    
-  app.listen(3001)
-  console.log('listening on http://localhost:3001')
+  if (process.env.NODE_ENV === 'production') {
+    app.use(express.static('../frontend/build'))
+    app.get('/', function(_, res) {
+      res.sendFile('../frontend/build', 'index.html')
+    })
+  }
+
+  const port = process.env.NODE_ENV === 'production'
+    ? process.env.PORT || 3000 : 3001
+  
+  app.listen(port)
+  console.log('listening on http://localhost:' + port)
 })
 
 
