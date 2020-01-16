@@ -104,7 +104,7 @@ const createApi = (db) => ({
       makeGetCallback(db, table, resolve, reject))
   }),
 
-  updateOneInTable: (table, key, values) => new Promise((resolve, reject) => {
+  updateOneInTable: (table, id, values) => new Promise((resolve, reject) => {
     const filteredFields = filterInputFields(table, values)
     if (filteredFields.length === 0) return resolve()
 
@@ -114,8 +114,8 @@ const createApi = (db) => ({
       .join(', ')} WHERE ${table.key} = ?`
 
     // run the sql statement with the field values and the key
-    db.run(sql, [...filteredFields.map(f => values[f]), key],
-      makeGetCallback(db, table, resolve, reject, key))
+    db.run(sql, [...filteredFields.map(f => values[f]), id],
+      makeGetCallback(db, table, resolve, reject, id))
   }),
 
   /**
